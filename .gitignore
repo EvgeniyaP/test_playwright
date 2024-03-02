@@ -1,0 +1,12 @@
+# -----------------------------------------------------------------
+#.gitignore
+# ignore all files starting with . or ~
+#.*
+#~*
+*.git
+*.idea
+*idea
+*__pycache__
+*.pytest_cache
+/.DS_Store
+*venv
