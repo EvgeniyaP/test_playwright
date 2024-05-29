@@ -13,9 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Check out the project code from version control
-                // Check out the code from GitHub to the Jenkins workspace
-                checkout scm
+                git 'https://github.com/EvgeniyaP/test_playwright.git'
             }
         }
         stage('Transfer Code to EC2') {
