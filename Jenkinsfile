@@ -13,7 +13,10 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/EvgeniyaP/test_playwright.git'
+                // Use SSH key credentials to checkout from Git
+                sshagent(credentials: [SSH_KEY_CREDENTIALS_ID]) {
+                    sh 'git clone git@github.com:EvgeniyaP/test_playwright.git'
+                }
             }
         }
         stage('Transfer Code to EC2') {
