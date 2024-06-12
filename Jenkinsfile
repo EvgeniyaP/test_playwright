@@ -50,15 +50,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        always {
-            // Archive test results, logs, etc.
-            archiveArtifacts artifacts: '**/test-results/*.xml', allowEmptyArchive: true
-            junit 'test-results/*.xml'
-            
-            // Clean up virtual environment
-            sh 'rm -rf ${VENV_DIR}'
-        }
-    }
 }
