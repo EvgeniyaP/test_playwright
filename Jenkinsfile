@@ -10,7 +10,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the code from the repository
-                git 'https://github.com/EvgeniyaP/test_playwright.git'
+                git(
+                    url: 'https://github.com/EvgeniyaP/test_playwright.git',
+                    branch: 'main'
+                ) 
             }
         }
 
