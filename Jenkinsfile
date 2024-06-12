@@ -1,63 +1,61 @@
 pipeline {
     agent any
-
+    
     environment {
-        PYTHON_VERSION = '3.9'
-        VENV_NAME = 'venv'
-        SSH_KEY_CREDENTIALS_ID = 'aws-ssh-key' // Jenkins credential ID for SSH key
-        AWS_EC2_HOST = '54.211.81.86' // The hostname or IP address of your EC2 instance
-        REMOTE_USER = 'ec2-user' // The username for SSH login (typically 'ec2-user' for Amazon Linux)
-        DEPLOY_DIR = '/home/ec2-user/deployment' // The deployment directory on the EC2 instance
+        VENV_DIR = 'venv'
+        REQUIREMENTS = 'requirements.txt'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Use SSH key credentials to checkout from Git
-                sshagent(credentials: [SSH_KEY_CREDENTIALS_ID]) {
-                    sh 'git clone git@github.com:EvgeniyaP/test_playwright.git'
-                }
+                // Checkout the code from the repository
+                git 'https://github.com/EvgeniyaP/test_playwright.git'
             }
         }
-        stage('Transfer Code to EC2') {
+
+        stage('Setup Python Environment') {
             steps {
-                // Transfer the code to the AWS EC2 instance
-                sshagent([SSH_KEY_CREDENTIALS_ID]) {
-                    sh """
-                    scp -o StrictHostKeyChecking=no -r * ${REMOTE_USER}@${AWS_EC2_HOST}:${DEPLOY_DIR}
-                    """
-                }
+                // Create a virtual environment
+                sh 'python3 -m venv ${VENV_DIR}'
+                
+                // Activate the virtual environment and install dependencies
+                sh '''
+                    source ${VENV_DIR}/bin/activate
+                    pip install -r ${REQUIREMENTS}
+                '''
             }
         }
-        stage('Run Tests on EC2') {
+
+        stage('Install Playwright') {
             steps {
-                // Connect to the EC2 instance and run tests
-                sshagent([SSH_KEY_CREDENTIALS_ID]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${AWS_EC2_HOST} << 'EOF'
-                        cd ${DEPLOY_DIR}
-                        python${PYTHON_VERSION} -m venv ${VENV_NAME}
-                        source ${VENV_NAME}/bin/activate
-                        pip install -r requirements.txt
-                        python -m playwright install --with-deps
-                        pytest
-                    EOF
-                    """
-                }
+                // Install Playwright and its dependencies
+                sh '''
+                    source ${VENV_DIR}/bin/activate
+                    python -m playwright install --with-deps
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                // Run pytest in the virtual environment
+                sh '''
+                    source ${VENV_DIR}/bin/activate
+                    pytest
+                '''
             }
         }
     }
 
     post {
-    always {
-            // Clean up actions, e.g., remove temporary files or resources
-            sh 'rm -rf test_results/'
-        }
-        success {
-            echo 'Pipeline succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed!'
+        always {
+            // Archive test results, logs, etc.
+            archiveArtifacts artifacts: '**/test-results/*.xml', allowEmptyArchive: true
+            junit 'test-results/*.xml'
+            
+            // Clean up virtual environment
+            sh 'rm -rf ${VENV_DIR}'
         }
     }
 }
