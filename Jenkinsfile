@@ -49,5 +49,13 @@ pipeline {
                 '''
             }
         }
+        post {
+            always {
+                allure includeProperties:
+                    false,
+                    jdk: '',
+                    results: [[path: 'test_results/allure-results']]
+            }
+        }
     }
 }
