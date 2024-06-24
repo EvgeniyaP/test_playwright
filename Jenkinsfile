@@ -4,6 +4,8 @@ pipeline {
     environment {
         VENV_DIR = 'venv'
         REQUIREMENTS = 'requirements.txt'
+        ALLURE_RESULTS_DIR = "${env.WORKSPACE}/allure-results"
+        ALLURE_REPORT_DIR = "${env.WORKSPACE}/allure-report"
     }
 
     stages {
@@ -42,6 +44,9 @@ pipeline {
 
         stage('Run Tests') {
             steps {
+                // Ensure the allure-results directory is clean before running tests
+                sh "rm -rf ${ALLURE_RESULTS_DIR}"
+                sh "mkdir -p ${ALLURE_RESULTS_DIR}"
                 // Run pytest in the virtual environment
                 sh '''
                     source ${VENV_DIR}/bin/activate
@@ -49,13 +54,17 @@ pipeline {
                 '''
             }
         }
+        stage('Generate Allure Report') {
+            steps {
+                // Run Allure command to generate the report
+                sh "allure generate ${ALLURE_RESULTS_DIR} -c -o ${ALLURE_REPORT_DIR}"
+            }
+        }
     }
     post {
         always {
-            allure includeProperties:
-                false,
-                jdk: '',
-                results: [[path: 'allure-results']]
+            // Publish Allure report in Jenkins
+            allure includeProperties: false, jdk: '', reportBuildPolicy: 'ALWAYS', results: [[path: 'allure-results']]
         }
     }
 }
