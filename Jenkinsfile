@@ -57,7 +57,7 @@ pipeline {
         stage('Generate Allure Report') {
             steps {
                 // Run Allure command to generate the report
-                sh '/home/jenkins/allure/bin/ generate /Users/evgeniapasko/jenkins_agent/workspace/Playwright-pipeline/allure-results -c -o /Users/evgeniapasko/jenkins_agent/workspace/Playwright-pipeline/allure-report'
+                sh '/home/jenkins/allure/bin/allure generate /Users/evgeniapasko/jenkins_agent/workspace/Playwright-pipeline/allure-results -c -o /Users/evgeniapasko/jenkins_agent/workspace/Playwright-pipeline/allure-report'
             }
         }
     }
